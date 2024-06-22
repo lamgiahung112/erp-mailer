@@ -44,20 +44,23 @@ func (consumer *Consumer) Listen() error {
 		return err
 	}
 	messages, err := channel.Consume(q.Name, "", true, false, false, false, nil)
+	if err != nil {
+		return err
+	}
 	log.Println("Listening for mail requests")
 	forever := make(chan bool)
 	go func() {
 		for d := range messages {
 			var p MailRequestPayload
 			_ = json.Unmarshal(d.Body, &p)
-			go handlePayload(p)
+			go handlePayload(&p)
 		}
 	}()
 	<-forever
 	return nil
 }
 
-func handlePayload(p MailRequestPayload) {
+func handlePayload(p *MailRequestPayload) {
 	switch MailType(p.MailType) {
 	case LoginOTP:
 		log.Println("OK")
